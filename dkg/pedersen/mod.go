@@ -419,7 +419,7 @@ func (a *Actor) VerifiableDecrypt(ciphertexts []types.Ciphertext, workerNum int)
 				}
 				decryptedMessage[j], err = res.Data()
 				if err != nil {
-					dela.Logger.Error().Msgf("failed to get enbeded data : %v", err)
+					dela.Logger.Error().Msgf("failed to get embeded data : %v", err)
 				}
 			}
 		}(jobChan)

@@ -14,4 +14,4 @@ FROM alpine:latest
 COPY --from=build /dela/dkgcli /usr/local/bin
 
 ENTRYPOINT [ "dkgcli" ]
-CMD ["--config", "/config", "start", "--routing", "tree", "--listen", "tcp://0.0.0.0:2000"]
+CMD ["--config", "/config", "start", "--routing", "tree", "--listen", "tcp://0.0.0.0:2000" ]

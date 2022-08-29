@@ -1,6 +1,7 @@
 package pedersen
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io"
 	"log"
@@ -38,8 +39,8 @@ func Test_verifiableEncDec_minoch(t *testing.T) {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 	// setting up the dkg
-	n := 180
-	threshold := 180
+	n := 5
+	threshold := 5
 	batchSize := 100
 	workerNum := 8
 
@@ -53,6 +54,10 @@ func Test_verifiableEncDec_minoch(t *testing.T) {
 	_, err := rand.Read(agreedData)
 	require.NoError(t, err)
 	GBar := suite.Point().Embed(agreedData, keccak.New(agreedData))
+
+	gBarbuff, err := GBar.MarshalBinary()
+	require.NoError(t, err)
+	fmt.Println(hex.EncodeToString(gBarbuff))
 
 	minoManager := minoch.NewManager()
 
