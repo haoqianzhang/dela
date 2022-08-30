@@ -42,7 +42,6 @@ func Test_verifiableEncDec_minoch(t *testing.T) {
 	n := 5
 	threshold := 5
 	batchSize := 100
-	workerNum := 8
 
 	minos := make([]mino.Mino, n)
 	dkgs := make([]dkg.DKG, n)
@@ -107,7 +106,7 @@ func Test_verifiableEncDec_minoch(t *testing.T) {
 
 	// decrypting the batch ciphertext message
 	fmt.Println("decrypting the ciphertext ...")
-	decrypted, err := actors[0].VerifiableDecrypt(ciphertexts, workerNum)
+	decrypted, err := actors[0].VerifiableDecrypt(ciphertexts)
 	require.NoError(t, err)
 	for i := 0; i < batchSize; i++ {
 		require.Equal(t, keys[i], decrypted[i])
@@ -209,7 +208,7 @@ func Test_verifiableEncDec_minogrpc(t *testing.T) {
 		// decryopting the batch ciphertext message
 		fmt.Println("decrypting the batch ...")
 		start = time.Now()
-		_, err := actors[0].VerifiableDecrypt(ciphertexts, workerNum)
+		_, err := actors[0].VerifiableDecrypt(ciphertexts)
 		decryptionTime := time.Since(start)
 		require.NoError(t, err)
 
@@ -217,8 +216,8 @@ func Test_verifiableEncDec_minogrpc(t *testing.T) {
 		// 	require.Equal(t, keys[i], decrypted[i])
 		// }
 
-		log.Printf("n = %d , batchSize = %d ,  workerNum = %d,decryption time = %v s, throughput =  %v tx/s , dkg setup time = %v s",
-			n, batchSize, workerNum, decryptionTime.Seconds(), float32(batchSize)/float32(decryptionTime.Seconds()), float32(setupTime.Seconds()))
+		log.Printf("n = %d , batchSize = %d  ,decryption time = %v s, throughput =  %v tx/s , dkg setup time = %v s",
+			n, batchSize, decryptionTime.Seconds(), float32(batchSize)/float32(decryptionTime.Seconds()), float32(setupTime.Seconds()))
 
 	}
 

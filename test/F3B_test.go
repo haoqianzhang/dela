@@ -51,7 +51,7 @@ func Test_F3B(t *testing.T) {
 		log.Println(http.ListenAndServe("localhost:6060", nil))
 	}()
 
-	numWorkersSlice := []int{2, 4, 8}
+	//numWorkersSlice := []int{2, 4, 8}
 	batchSizeSlice := []int{8, 32, 64}
 
 	// logging the result
@@ -167,11 +167,11 @@ func Test_F3B(t *testing.T) {
 	// for more information refer to https://arxiv.org/pdf/2205.08529.pdf / page 6 / step 1 (write transaction)
 	fmt.Println("encrypting the data ...")
 
-	for i, batchSize := range batchSizeSlice {
+	for _, batchSize := range batchSizeSlice {
 		// the write transaction arguments
 		argSlice := make([][]txn.Arg, batchSize)
 
-		numWorkers := numWorkersSlice[i]
+		//numWorkers := numWorkersSlice[i]
 		var ciphertexts []types.Ciphertext
 
 		const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -225,7 +225,7 @@ func Test_F3B(t *testing.T) {
 
 		fmt.Println("decrypting the data ...")
 		// decryopting the symmetric key in batch
-		decrypted, err := actors[0].VerifiableDecrypt(ciphertexts, numWorkers)
+		decrypted, err := actors[0].VerifiableDecrypt(ciphertexts)
 		require.NoError(t, err)
 
 		// make sure that the decryption was correct

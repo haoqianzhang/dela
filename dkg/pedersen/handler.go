@@ -3,6 +3,7 @@ package pedersen
 import (
 	"context"
 	"crypto/sha256"
+	"math"
 	"sync"
 	"time"
 
@@ -328,6 +329,7 @@ func (h *Handler) handleVerifiableDecrypt(out mino.Sender, msg types.VerifiableD
 	}
 	ciphertexts := msg.GetCiphertexts()
 	batchsize := len(ciphertexts)
+	workerNum := workerNumSlice[int64(math.Log2(float64(batchsize)))]
 
 	shareAndProofs := make([]types.ShareAndProof, batchsize)
 	jobChan := make(chan job, batchsize)

@@ -2,6 +2,7 @@ package pedersen
 
 import (
 	"crypto/sha256"
+	"math"
 	"sync"
 	"time"
 
@@ -51,6 +52,8 @@ type Pedersen struct {
 	mino    mino.Mino
 	factory serde.Factory
 }
+
+var workerNumSlice = []int{1, 1, 2, 4, 8, 16, 32, 64, 128, 265}
 
 // NewPedersen returns a new DKG Pedersen factory
 func NewPedersen(m mino.Mino) (*Pedersen, kyber.Point) {
@@ -319,7 +322,7 @@ func (a *Actor) Decrypt(K, C kyber.Point) ([]byte, error) {
 // a discription can be found in https://arxiv.org/pdf/2205.08529.pdf / section 5.4 Protocol / ster 3: key reconstruction
 // TODO: perform a re-encryption instead of gathering the private shares, which
 // should never happen.
-func (a *Actor) VerifiableDecrypt(ciphertexts []types.Ciphertext, workerNum int) ([][]byte, error) {
+func (a *Actor) VerifiableDecrypt(ciphertexts []types.Ciphertext) ([][]byte, error) {
 
 	if !a.startRes.Done() {
 		return nil, xerrors.Errorf("you must first initialize DKG. " +
@@ -346,6 +349,7 @@ func (a *Actor) VerifiableDecrypt(ciphertexts []types.Ciphertext, workerNum int)
 	}
 
 	batchsize := len(ciphertexts)
+	workerNum := workerNumSlice[int64(math.Log2(float64(batchsize)))]
 
 	message := types.NewVerifiableDecryptRequest(ciphertexts)
 	// sending the decrypt request to the nodes
