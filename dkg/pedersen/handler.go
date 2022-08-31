@@ -206,7 +206,7 @@ func (h *Handler) Stream(out mino.Sender, in mino.Receiver) error {
 		case types.Start:
 			dela.Logger.Trace().Msgf("%v received start from %v\n", h.me, from)
 			done := make(chan struct{})
-			err = h.handleStart(out, from, msg, done)
+			err = h.handleStart(ctx, out, from, msg, done)
 			if err != nil {
 				return xerrors.Errorf("failed to handle start: %v", err)
 			}
@@ -378,7 +378,7 @@ func (h *Handler) handleVerifiableDecrypt(out mino.Sender, msg types.VerifiableD
 	return nil
 }
 
-func (h *Handler) handleStart(out mino.Sender,
+func (h *Handler) handleStart(ctx context.Context, out mino.Sender,
 	from mino.Address, msg types.Start, done chan struct{}) error {
 	if h.startRes.Done() {
 		dela.Logger.Warn().Msgf(
@@ -396,8 +396,6 @@ func (h *Handler) handleStart(out mino.Sender,
 
 	h.startRes.Start()
 
-	ctx := context.Background()
-	ctx, _ = context.WithTimeout(ctx, 5*time.Minute)
 	go func() {
 		err := h.start(ctx, msg, from, out)
 		if err != nil {
@@ -428,6 +426,9 @@ func (h *Handler) start(ctx context.Context, start types.Start,
 			len(start.GetPublicKeys()),
 		)
 	}
+	n := len(participants)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(n*n)*time.Second)
+	defer cancel()
 
 	// 1. Create the DKG
 	d, err := pedersen.NewDistKeyGenerator(suite, h.privKey, start.GetPublicKeys(), start.GetThreshold())
@@ -503,7 +504,7 @@ func (h *Handler) sendDeals(ctx context.Context, out mino.Sender,
 			err := <-errs
 			if err != nil {
 				dela.Logger.Warn().Msgf(
-					"got an error while sending deal %v: %v", i, err)
+					"got an error while sending deal %v: %v", idx, err)
 				errors <- err
 			} else {
 				done <- idx
@@ -619,6 +620,7 @@ func (h *Handler) handleDeal(msg *types.Deal, from mino.Address,
 func (h *Handler) certify(ctx context.Context) error {
 	dela.Logger.Trace().Msgf("%v is certifying dkg", h.me)
 
+	i := 0
 	for !h.dkg.Certified() {
 		select {
 		case rf, ok := <-h.responses:
@@ -644,10 +646,11 @@ func (h *Handler) certify(ctx context.Context) error {
 
 			_, err := h.dkg.ProcessResponse(response)
 			if err != nil {
-				dela.Logger.Warn().Msgf("%s failed to process response: %v", h.me, err)
+				dela.Logger.Err(err).Msgf("%s failed to process response", h.me)
 			} else {
-				dela.Logger.Trace().Msgf("%s handled response from %s",
-					h.me, rf.from)
+				dela.Logger.Trace().Msgf("%s handled response (%d) from %s",
+					h.me, i, rf.from)
+				i++
 			}
 
 		case <-ctx.Done():
