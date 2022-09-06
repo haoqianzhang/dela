@@ -1,12 +1,13 @@
 package debugsync
 
 import (
-	"go.dedis.ch/dela"
 	"runtime/debug"
 	"time"
+
+	"go.dedis.ch/dela"
 )
 
-const mutexTimeout = 60 * time.Second
+const mutexTimeout = 600 * time.Second
 
 func startLockTimer(msg string) chan struct{} {
 	done := make(chan struct{})

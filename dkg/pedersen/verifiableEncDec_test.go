@@ -23,7 +23,7 @@ import (
 	"go.dedis.ch/dela/mino/minoch"
 	_ "go.dedis.ch/dela/mino/minoch"
 	"go.dedis.ch/dela/mino/minogrpc"
-	"go.dedis.ch/dela/mino/router/tree"
+	"go.dedis.ch/dela/mino/router/flat"
 
 	"go.dedis.ch/kyber/v3"
 	"go.dedis.ch/kyber/v3/xof/keccak"
@@ -123,8 +123,7 @@ func Test_verifiableEncDec_minogrpc(t *testing.T) {
 	// we want to time the decryption for different batch sizes with different number of nodes
 	// numWorkersSlice := []int{16, 16, 32, 64, 64, 64, 64}
 	// batchSizeSlice := []int{32, 64, 128, 256, 512, 1024, 2048}
-	numWorkersSlice := []int{8}
-	batchSizeSlice := []int{32}
+	batchSizeSlice := []int{1, 2, 4, 8, 16, 32, 64, 128, 256}
 
 	// initiating the log file for writing the delay and throughput data
 	f, err := os.OpenFile("../logs/test.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -134,8 +133,8 @@ func Test_verifiableEncDec_minogrpc(t *testing.T) {
 	log.SetOutput(wrt)
 
 	// setting up the dkg
-	n := 64
-	threshold := 64
+	n := 80
+	threshold := 80
 
 	minos := make([]mino.Mino, n)
 	dkgs := make([]dkg.DKG, n)
@@ -152,7 +151,7 @@ func Test_verifiableEncDec_minogrpc(t *testing.T) {
 	for i := 0; i < n; i++ {
 		addr := minogrpc.ParseAddress("127.0.0.1", 0)
 
-		minogrpc, err := minogrpc.NewMinogrpc(addr, nil, tree.NewRouter(minogrpc.NewAddressFactory()))
+		minogrpc, err := minogrpc.NewMinogrpc(addr, nil, flat.NewRouter(minogrpc.NewAddressFactory()))
 		require.NoError(t, err)
 
 		defer minogrpc.GracefulStop()
@@ -188,9 +187,8 @@ func Test_verifiableEncDec_minogrpc(t *testing.T) {
 	setupTime := time.Since(start)
 
 	//generating random messages in batch and encrypt them
-	for i, batchSize := range batchSizeSlice {
+	for _, batchSize := range batchSizeSlice {
 		fmt.Printf("=== starting the process with batch size = %d === \n", batchSize)
-		workerNum = numWorkersSlice[i]
 
 		const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 		keys := make([][]byte, batchSize)
