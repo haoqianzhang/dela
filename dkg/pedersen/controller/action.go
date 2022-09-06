@@ -367,7 +367,6 @@ func (a verifiableEncryptAction) Execute(ctx node.Context) error {
 }
 
 // Verifiable decrypt
-
 type verifiableDecryptAction struct{}
 
 func (a verifiableDecryptAction) Execute(ctx node.Context) error {
@@ -397,10 +396,11 @@ func (a verifiableDecryptAction) Execute(ctx node.Context) error {
 	ciphertextString := ctx.Flags.String("ciphertexts")
 
 	parts := strings.Split(ciphertextString, separator)
-	if len(parts)%5 != 0 {
-		return xerrors.Errorf("malformed encoded: %s", ciphertextString)
-	}
+	// if len(parts)%5 != 0 {
+	// 	return xerrors.Errorf("malformed encoded: %s", ciphertextString)
+	// }
 
+	// Each batch contains 5 parts
 	batchSize := len(parts) / 5
 
 	for i := 0; i < batchSize; i++ {
@@ -499,7 +499,6 @@ func (a verifiableDecryptAction) Execute(ctx node.Context) error {
 }
 
 // reshare
-
 type reshareAction struct{}
 
 func (a reshareAction) Execute(ctx node.Context) error {

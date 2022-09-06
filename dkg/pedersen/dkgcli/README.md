@@ -24,10 +24,40 @@ dkgcli --config /tmp/node3 dkg listen
 dkgcli --config /tmp/node1 dkg setup \
     --authority $(cat /tmp/node1/dkgauthority) \
     --authority $(cat /tmp/node2/dkgauthority) \
-    --authority $(cat /tmp/node3/dkgauthority)
+    --authority $(cat /tmp/node3/dkgauthority) --threshold 3
 
 # Encrypt a message:
 dkgcli --config /tmp/node2 dkg encrypt --message deadbeef
 
 # Decrypt a message
 dkgcli --config /tmp/node3 dkg decrypt --encrypted <...>
+
+# Encrypt a message with verifiable encryption function 
+# Receive the ciphertext as well as the encryption proofs
+# GBar is the second generator of the group.
+dkgcli --config /tmp/node2 dkg verifiableEncrypt --message deadbeef --GBar 1d0194fdc2fa2ffcc041d3ff12045b73c86e4ff95ff662a5eee82abdf44a53c7
+
+# Verify the encryption proof and decrypt the ciphertext
+# Ciphertext should be in the form of <hex(K)>:<hex(C)>:<hex(Ubar)>:<hex(E)>:<hex(F)>
+# In the case of batch decryption you can append as many as ciphertexts you want using ":" as the separator 
+# GBar should be the same that we used for encryption
+dkgcli --config /tmp/node3 dkg verifiableDecrypt --ciphertexts <...> --GBar 1d0194fdc2fa2ffcc041d3ff12045b73c86e4ff95ff662a5eee82abdf44a53c7
+
+# Adding a new node
+LLVL=info dkgcli --config /tmp/node4 start --routing tree --listen tcp://127.0.0.1:2004
+
+# Exchange certificates
+dkgcli --config /tmp/node4 minogrpc join --address //127.0.0.1:2001 $(dkgcli --config /tmp/node1 minogrpc token)
+
+# Initialize DKG on the new node. Do that in a 4th session.
+dkgcli --config /tmp/node4 dkg listen
+
+# Reshare the secret from node1-node2-node3 committee to node1-node2-node4 committee
+dkgcli --config /tmp/node1 dkg reshare \
+    --authority $(cat /tmp/node1/dkgauthority) \
+    --authority $(cat /tmp/node2/dkgauthority) \
+    --authority $(cat /tmp/node4/dkgauthority) --thresholdNew 3
+
+
+# You should be able to decrypt the same ciphertext with the new committee
+dkgcli --config /tmp/node4 dkg verifiableDecrypt --ciphertexts <...> --GBar 1d0194fdc2fa2ffcc041d3ff12045b73c86e4ff95ff662a5eee82abdf44a53c7
