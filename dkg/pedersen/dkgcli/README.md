@@ -2,7 +2,7 @@
 
 DKGCLI is a CLI tool for using the DKG protocol. Here is a complete scenario:
 
-## Dkg
+## DKG
 ```sh
 # Install the CLI
 go install .
